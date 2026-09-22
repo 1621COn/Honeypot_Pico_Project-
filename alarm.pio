@@ -1,0 +1,29 @@
+// Assembly code that uses the Pico W's Programmable Input/Output (PIO) to leverage the machine and it's resources 
+.program alarm
+.wrap_target
+main_loop:           
+    pull block
+    mov x, osr
+    jmp !x, off_turn
+
+    set pins, 1
+          
+    jmp main_loop    
+
+off_turn:
+    set pins, 0
+.wrap
+
+
+%c-sdk {
+static inline void alarm_program_init(PIO pio, uint sm, uint offset, uint pin) {
+    pio_sm_config c = alarm_program_get_default_config(offset);
+
+    sm_config_set_set_pins(&c, pin, 1);
+    pio_gpio_init(pio, pin);
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
